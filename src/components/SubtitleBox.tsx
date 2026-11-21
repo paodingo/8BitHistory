@@ -1,6 +1,7 @@
 import React from 'react';
 import { AbsoluteFill } from 'remotion';
-import { PIXEL_FONT, dialogBorderStyle, hardTextShadow, thinBorderStyle } from '../pixel-style';
+import { PIXEL_FONT, dialogBorderStyle, hardTextShadow, thinBorderStyle, pixelOutlineText } from '../pixel-style';
+import { BustPortrait } from './pixel-art';
 
 /**
  * SubtitleBox：经典黑底白双线 RPG 文本框。
@@ -19,6 +20,9 @@ export const SubtitleBox: React.FC<{
   speakerColor?: string;
   portraitChar?: string;
   portraitColor?: string;
+  portraitHighlightColor?: string;
+  portraitDarkColor?: string;
+  portraitBeard?: boolean;
   portraitImageUrl?: string | null;
   portraitSide?: 'left' | 'right';
   subText?: string;
@@ -32,6 +36,9 @@ export const SubtitleBox: React.FC<{
   speakerColor = '#ffffff',
   portraitChar,
   portraitColor = '#000000',
+  portraitHighlightColor,
+  portraitDarkColor,
+  portraitBeard = true,
   portraitImageUrl = null,
   portraitSide = 'left',
   subText,
@@ -128,6 +135,25 @@ export const SubtitleBox: React.FC<{
           alt={speaker ?? ''}
           style={{ width: '100%', height: '100%', objectFit: 'cover', imageRendering: 'pixelated' }}
         />
+      ) : portraitHighlightColor && portraitDarkColor ? (
+        // 像素半身立绘（阵营色板驱动，imageUrl 替换入口已预留）
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            backgroundColor: portraitColor,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <BustPortrait
+            color={portraitColor}
+            highlight={portraitHighlightColor}
+            dark={portraitDarkColor}
+            beard={portraitBeard}
+          />
+        </div>
       ) : (
         <div
           style={{

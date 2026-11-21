@@ -1,7 +1,8 @@
 import React from 'react';
 import { interpolate } from 'remotion';
 import type { ArmyEntity, FactionStyle, MoveSegment, UnitSprite, Vec2 } from '../types';
-import { PIXEL_FONT, hardTextShadow } from '../pixel-style';
+import { PIXEL_FONT, ART, pixelOutlineText } from '../pixel-style';
+import { PixelCanvas, Px } from './pixel-art';
 
 /** 兵力数字格式化：100000 -> 10万；9400 -> 9千 */
 export const formatTroops = (v: number): string =>
@@ -47,13 +48,15 @@ const positionAtFrame = (moves: MoveSegment[], f: number): PositionState => {
   };
 };
 
-const HORSE = '#c9a06a';
-const HORSE_DARK = '#7d5f38';
-const SKIN = '#f2c99a';
-const WOOD = '#3a2a18';
-const GOLD = '#ffd24a';
+/** 马腿两帧：A 组高 B 组低，交错踏步 */
+const HORSE_LEGS_A: [number, number, number, number][] = [
+  [4, 11, 2, 4], [6, 11, 2, 3], [9, 11, 2, 3], [11, 11, 2, 4],
+];
+const HORSE_LEGS_B: [number, number, number, number][] = [
+  [4, 11, 2, 3], [6, 11, 2, 4], [9, 11, 2, 4], [11, 11, 2, 3],
+];
 
-/** 像素骑兵（向右，16x16 网格 SVG 占位，imageUrl 字段已预留） */
+/** 像素骑兵 v2（16x16，朝右，全描边+高光） */
 const CavalrySprite: React.FC<{
   faction: FactionStyle;
   frame: number;
@@ -61,55 +64,46 @@ const CavalrySprite: React.FC<{
   leader: boolean;
   flip: boolean;
 }> = ({ faction, frame, moving, leader, flip }) => {
-  // 每 8 帧切换一次姿态（极简走路模拟）
   const phase = moving && Math.floor(frame / 8) % 2 === 1 ? 1 : 0;
-  const legs =
-    phase === 0
-      ? [
-          [4, 10, 2, 4],
-          [6, 10, 2, 3],
-          [9, 10, 2, 3],
-          [11, 10, 2, 4],
-        ]
-      : [
-          [4, 10, 2, 3],
-          [6, 10, 2, 4],
-          [9, 10, 2, 4],
-          [11, 10, 2, 3],
-        ];
+  const legs = phase === 0 ? HORSE_LEGS_A : HORSE_LEGS_B;
+  const bodyBob = phase === 1 ? 1 : 0; // 奔跑时身体起伏 1px
   return (
-    <svg
-      width={76}
-      height={76}
-      viewBox="0 0 16 16"
-      shapeRendering="crispEdges"
-      style={{ imageRendering: 'pixelated', display: 'block', transform: flip ? 'scaleX(-1)' : undefined }}
-    >
-      {/* 军旗（主将金色） */}
-      <rect x={2} y={1} width={1} height={5} fill={WOOD} />
-      <rect x={3} y={1} width={4} height={3} fill={leader ? GOLD : faction.color} />
-      {/* 马尾 / 马身 / 颈 / 头 */}
-      <rect x={2} y={7} width={2} height={2} fill={HORSE_DARK} />
-      <rect x={4} y={7} width={8} height={3} fill={HORSE} />
-      <rect x={11} y={5} width={2} height={3} fill={HORSE} />
-      <rect x={12} y={4} width={3} height={2} fill={HORSE} />
-      <rect x={13} y={3} width={1} height={1} fill={HORSE_DARK} />
-      {/* 马腿：两帧切换 */}
+    <PixelCanvas size={84} flip={flip}>
+      {/* 军旗（主将） */}
+      {leader ? (
+        <>
+          <Px x={1} y={0} w={1} h={7} f={ART.woodDark} />
+          <Px x={2} y={0} w={5} h={4} f={faction.color} />
+          <rect x={2} y={0} width={5} height={1} fill={faction.highlight} />
+        </>
+      ) : null}
+      {/* 马尾 */}
+      <Px x={2} y={7 + bodyBob} w={1} h={3} f={ART.horseDark} />
+      {/* 马身 */}
+      <Px x={3} y={8 + bodyBob} w={9} h={3} f={ART.horse} />
+      <rect x={3} y={8 + bodyBob} width={9} height={1} fill={ART.horseDark} opacity={0.5} />
+      {/* 颈 + 头 + 耳 */}
+      <Px x={10} y={5 + bodyBob} w={2} h={3} f={ART.horse} />
+      <Px x={11} y={4 + bodyBob} w={3} h={2} f={ART.horse} />
+      <rect x={14} y={3 + bodyBob} width={1} height={1} fill={ART.horseDark} />
+      <rect x={13} y={4 + bodyBob} width={1} height={1} fill={ART.outline} />
+      {/* 马腿两帧切换 */}
       {legs.map(([x, y, w, h], i) => (
-        <rect key={i} x={x} y={y} width={w} height={h} fill={HORSE_DARK} />
+        <Px key={i} x={x} y={y + bodyBob} w={w} h={h} f={ART.horseDark} />
       ))}
-      {/* 骑手 */}
-      <rect x={6} y={4} width={3} height={3} fill={faction.color} />
-      <rect x={6} y={2} width={2} height={2} fill={SKIN} />
-      <rect x={6} y={1} width={2} height={1} fill={faction.dark} />
-      {/* 长矛 */}
-      <rect x={9} y={2} width={1} height={4} fill="#9aa0a8" />
-      <rect x={9} y={1} width={1} height={1} fill="#e8e8e8" />
-    </svg>
+      {/* 骑手：甲（阵营主色+高光）→ 头 → 盔 */}
+      <Px x={6} y={4 + bodyBob} w={3} h={4} f={faction.color} />
+      <rect x={6} y={4 + bodyBob} width={1} height={4} fill={faction.highlight} />
+      <Px x={6} y={2 + bodyBob} w={2} h={2} f={ART.skin} />
+      <Px x={5} y={1 + bodyBob} w={4} h={1} f={faction.dark} />
+      {/* 长矛：木杆 + 钢尖 */}
+      <Px x={11} y={1 + bodyBob} w={1} h={5} f={ART.wood} />
+      <Px x={11} y={0 + bodyBob} w={1} h={1} f={ART.steel} />
+    </PixelCanvas>
   );
 };
 
-/** 像素军旗步兵队（16x16 网格 SVG 占位） */
+/** 像素军旗步兵队 v2（18x14 网格：旗在左、两名士兵在右，间距拉开防描边粘连） */
 const BannerSprite: React.FC<{
   faction: FactionStyle;
   frame: number;
@@ -118,34 +112,41 @@ const BannerSprite: React.FC<{
   flip: boolean;
 }> = ({ faction, frame, moving, leader, flip }) => {
   const phase = moving && Math.floor(frame / 8) % 2 === 1 ? 1 : 0;
-  const bob = (i: number) => (phase === 1 && i % 2 === 0 ? -1 : 0);
-  const soldiers = [1, 6, 11];
+  const step = (i: number) => (phase === 1 && i % 2 === 0 ? 1 : 0);
+  const soldier = (x: number, i: number) => {
+    const s = step(i);
+    return (
+      <React.Fragment key={x}>
+        <Px x={x} y={6 + s} w={2} h={1} f={faction.dark} />
+        <Px x={x} y={7 + s} w={2} h={1} f={ART.skin} />
+        <Px x={x} y={8 + s} w={2} h={3} f={faction.color} />
+        <rect x={x} y={8 + s} width={1} height={3} fill={faction.highlight} />
+        <Px x={x} y={11 + s} w={2} h={2} f={faction.dark} />
+      </React.Fragment>
+    );
+  };
   return (
     <svg
-      width={96}
-      height={96}
-      viewBox="0 0 16 16"
+      width={84}
+      height={84}
+      viewBox="0 0 18 14"
       shapeRendering="crispEdges"
       style={{ imageRendering: 'pixelated', display: 'block', transform: flip ? 'scaleX(-1)' : undefined }}
     >
-      {/* 大旗 */}
-      <rect x={7} y={1} width={1} height={9} fill="#4a3a22" />
-      <rect x={8} y={1} width={6} height={leader ? 5 : 4} fill={faction.color} />
-      {leader ? <rect x={8} y={5} width={6} height={1} fill={faction.dark} /> : null}
-      {/* 三名士兵，走路时交错上下 1px */}
-      {soldiers.map((x, i) => (
-        <React.Fragment key={x}>
-          <rect x={x + 1} y={8 + bob(i)} width={2} height={2} fill={SKIN} />
-          <rect x={x} y={10 + bob(i)} width={4} height={4} fill={faction.color} />
-          <rect x={x} y={14 + bob(i)} width={4} height={1} fill={faction.dark} />
-        </React.Fragment>
-      ))}
+      {/* 大旗（左）：杆 + 旗面（高光/暗部条） */}
+      <Px x={1} y={0} w={1} h={12} f={ART.woodDark} />
+      <Px x={2} y={0} w={5} h={leader ? 6 : 5} f={faction.color} />
+      <rect x={2} y={0} width={5} height={1} fill={faction.highlight} />
+      <rect x={2} y={leader ? 5 : 4} width={5} height={1} fill={faction.dark} />
+      {/* 两名士兵（右，间隔 1px） */}
+      {soldier(10, 0)}
+      {soldier(14, 1)}
     </svg>
   );
 };
 
 /**
- * ArmyUnit：数据驱制作战单位。
+ * ArmyUnit：数据驱动作战单位。
  * - 直线 interpolate 行军；编队用 sprites 偏移 + 延迟帧实现
  * - 每 8 帧切换一次姿态的极简走路模拟
  * - 头顶兵力数字（troopsKeyframes 支持实时掉血）+ 迷你血条
@@ -208,8 +209,8 @@ export const ArmyUnit: React.FC<{
         <img
           src={army.imageUrl}
           alt={army.name}
-          width={army.type === 'cavalry' ? 76 : 96}
-          height={army.type === 'cavalry' ? 76 : 96}
+          width={84}
+          height={84}
           style={{ imageRendering: 'pixelated', display: 'block' }}
         />
       ) : army.type === 'cavalry' ? (
@@ -232,14 +233,14 @@ export const ArmyUnit: React.FC<{
 
       <div
         style={{
-          marginTop: 4,
+          marginTop: 6,
           textAlign: 'center',
           fontFamily: PIXEL_FONT,
-          fontSize: 26,
+          fontSize: 27,
           fontWeight: 'bold',
           color: '#ffffff',
           whiteSpace: 'nowrap',
-          ...hardTextShadow,
+          ...pixelOutlineText,
         }}
       >
         {label}
@@ -248,12 +249,12 @@ export const ArmyUnit: React.FC<{
       {hpPct !== null ? (
         <div
           style={{
-            marginTop: 4,
             width: 120,
             height: 12,
             background: '#000',
-            border: '2px solid #ffffff',
-            margin: '4px auto 0',
+            border: `3px solid ${ART.outline}`,
+            boxShadow: '0 0 0 2px #ffffff',
+            margin: '6px auto 0',
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -266,6 +267,18 @@ export const ArmyUnit: React.FC<{
               height: '100%',
               width: `${Math.max(0, Math.min(1, hpPct)) * 100}%`,
               backgroundColor: faction.color,
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              height: '100%',
+              width: `${Math.max(0, Math.min(1, hpPct)) * 100}%`,
+              backgroundColor: faction.highlight,
+              opacity: 0.45,
+              clipPath: 'polygon(0 0, 100% 0, 100% 45%, 0 45%)',
             }}
           />
         </div>

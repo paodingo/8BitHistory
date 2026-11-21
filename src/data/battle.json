@@ -13,20 +13,20 @@
     "width": 3200,
     "height": 1800,
     "imageUrl": null,
-    "baseColor": "#1f7a38",
-    "gridColor": "rgba(0, 0, 0, 0.14)",
-    "gridSize": 64,
+    "baseColor": "#48BB78",
+    "checkerAlt": "#3CA56A",
+    "tileSize": 64,
     "terrain": [
-      { "type": "river", "name": "黄河", "x": 0, "y": 0, "width": 3200, "height": 240, "color": "#1c509e", "edgeColor": "#2f78d8" },
-      { "type": "woods", "name": "树林", "x": 620, "y": 960, "width": 340, "height": 260, "color": "#155f28" },
-      { "type": "hills", "name": "丘陵", "x": 1900, "y": 1150, "width": 420, "height": 280, "color": "#2b8f43" },
-      { "type": "road", "name": "官道", "points": [[1120, 1080], [1600, 730]], "color": "#97824e", "width": 22 }
+      { "type": "river", "name": "黄河", "x": 0, "y": 0, "width": 3200, "height": 240, "color": "#3182CE", "edgeColor": "#1A1A1A" },
+      { "type": "woods", "name": "树林", "x": 620, "y": 960, "width": 340, "height": 260, "color": "#276749" },
+      { "type": "hills", "name": "丘陵", "x": 1900, "y": 1150, "width": 420, "height": 280, "color": "#2F855A" },
+      { "type": "road", "name": "官道", "points": [[1120, 1080], [1600, 730]], "color": "#975A16", "width": 22 }
     ]
   },
 
   "factions": {
-    "cao": { "name": "曹军", "color": "#3fa7ff", "dark": "#1c5f9e" },
-    "yuan": { "name": "袁军", "color": "#ff6a52", "dark": "#96291c" }
+    "cao": { "name": "曹军", "color": "#2B6CB0", "highlight": "#63B3ED", "dark": "#1A365D" },
+    "yuan": { "name": "袁军", "color": "#C53030", "highlight": "#FC8181", "dark": "#742A2A" }
   },
 
   "locations": [
@@ -36,17 +36,19 @@
   ],
 
   "camera": [
-    { "frame": 0, "x": 1600, "y": 900, "zoom": 0.6 },
-    { "frame": 46, "x": 1600, "y": 900, "zoom": 0.6 },
-    { "frame": 82, "x": 1250, "y": 1000, "zoom": 1.04 },
-    { "frame": 120, "x": 1250, "y": 985, "zoom": 1.04 },
-    { "frame": 172, "x": 1340, "y": 870, "zoom": 0.94 },
-    { "frame": 192, "x": 1330, "y": 1005, "zoom": 1.0 },
-    { "frame": 300, "x": 2290, "y": 830, "zoom": 1.12 },
-    { "frame": 316, "x": 2330, "y": 788, "zoom": 1.12 },
-    { "frame": 408, "x": 2330, "y": 788, "zoom": 1.12 },
-    { "frame": 436, "x": 1600, "y": 900, "zoom": 0.6 },
-    { "frame": 450, "x": 1600, "y": 900, "zoom": 0.6 }
+    { "frame": 0, "x": 1600, "y": 900, "zoom": 0.62 },
+    { "frame": 44, "x": 1600, "y": 900, "zoom": 0.72 },
+    { "frame": 82, "x": 1250, "y": 1000, "zoom": 1.05 },
+    { "frame": 120, "x": 1250, "y": 985, "zoom": 1.05 },
+    { "frame": 170, "x": 1330, "y": 880, "zoom": 0.95 },
+    { "frame": 192, "x": 1330, "y": 1000, "zoom": 1.0 },
+    { "frame": 246, "x": 1800, "y": 950, "zoom": 0.9 },
+    { "frame": 300, "x": 2290, "y": 830, "zoom": 1.1 },
+    { "frame": 316, "x": 2330, "y": 790, "zoom": 1.18 },
+    { "frame": 360, "x": 2330, "y": 790, "zoom": 1.26 },
+    { "frame": 408, "x": 2330, "y": 790, "zoom": 1.26 },
+    { "frame": 436, "x": 1600, "y": 900, "zoom": 0.62 },
+    { "frame": 450, "x": 1600, "y": 900, "zoom": 0.62 }
   ],
 
   "armies": [
@@ -192,8 +194,8 @@
       "fullFrame": 336,
       "endFrame": 450,
       "imageUrl": null,
-      "tint": { "color": "#ff4a10", "maxOpacity": 0.16, "flickerFrames": 8 },
-      "shake": { "startFrame": 300, "durationFrames": 44, "amplitude": 7 }
+      "tint": { "color": "#E53E1F", "maxOpacity": 0.16, "flickerFrames": 8 },
+      "shake": { "startFrame": 300, "durationFrames": 44, "amplitude": 9 }
     }
   ],
 

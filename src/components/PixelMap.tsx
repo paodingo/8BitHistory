@@ -1,14 +1,28 @@
 import React from 'react';
 import type { MapConfig, TerrainPiece } from '../types';
+import { ART } from '../pixel-style';
+import { Px } from './pixel-art';
 
-/** 单棵像素树：树冠方块 + 树干 */
-const Tree: React.FC<{ x: number; y: number }> = ({ x, y }) => (
-  <div style={{ position: 'absolute', left: x, top: y, width: 40, height: 56 }}>
-    <div style={{ position: 'absolute', left: 2, top: 0, width: 36, height: 36, background: '#0e4d20' }} />
-    <div style={{ position: 'absolute', left: 8, top: 8, width: 14, height: 12, background: '#176b30' }} />
-    <div style={{ position: 'absolute', left: 14, top: 36, width: 12, height: 20, background: '#5a3d1e' }} />
-  </div>
-);
+/** 描边像素树：三层收窄树冠 + 高光 + 木色树干（大小三档） */
+const Tree: React.FC<{ x: number; y: number; s: number }> = ({ x, y, s }) => {
+  const scale = s === 0 ? 1 : s === 1 ? 1.15 : 1.3;
+  return (
+    <svg
+      width={Math.round(44 * scale)}
+      height={Math.round(52 * scale)}
+      viewBox="0 0 11 12"
+      shapeRendering="crispEdges"
+      style={{ position: 'absolute', left: x, top: y, imageRendering: 'pixelated' }}
+    >
+      <Px x={3} y={0} w={5} h={3} f="#276749" />
+      <Px x={2} y={2} w={7} h={3} f="#2F855A" />
+      <Px x={3} y={4} w={5} h={2} f="#2F855A" />
+      <rect x={4} y={0} width={2} height={1} fill="#38A169" />
+      <rect x={3} y={2} width={2} height={1} fill="#38A169" />
+      <Px x={4} y={6} w={3} h={3} f={ART.wood} />
+    </svg>
+  );
+};
 
 const TerrainBlock: React.FC<{
   piece: TerrainPiece;
@@ -16,32 +30,31 @@ const TerrainBlock: React.FC<{
   mapHeight: number;
 }> = ({ piece, mapWidth, mapHeight }) => {
   if (piece.type === 'river') {
-    const { x = 0, y = 0, width = 0, height = 0, color, edgeColor = '#fff' } = piece;
+    const { x = 0, y = 0, width = 0, height = 0, color, edgeColor = ART.outline } = piece;
     return (
       <div style={{ position: 'absolute', left: x, top: y, width, height, background: color }}>
-        {/* 两岸硬边 */}
-        <div style={{ position: 'absolute', left: 0, bottom: 0, width: '100%', height: 10, background: edgeColor }} />
-        {/* 像素波纹（硬停顿渐变，非柔和过渡） */}
+        {/* 南岸深墨描边 + 高光水线 */}
+        <div style={{ position: 'absolute', left: 0, bottom: 0, width: '100%', height: 12, background: edgeColor }} />
+        <div style={{ position: 'absolute', left: 0, bottom: 12, width: '100%', height: 8, background: ART.waterLight, opacity: 0.55 }} />
+        {/* 两排像素波纹（硬停顿虚线） */}
         <div
           style={{
             position: 'absolute',
             left: 0,
-            top: Math.round(height * 0.3),
+            top: Math.round(height * 0.28),
             width: '100%',
-            height: 10,
-            background:
-              'repeating-linear-gradient(90deg, transparent 0 90px, rgba(255,255,255,0.22) 90px 134px, transparent 134px 200px)',
+            height: 12,
+            background: `repeating-linear-gradient(90deg, transparent 0 110px, ${ART.waterLight} 110px 168px, transparent 168px 260px)`,
           }}
         />
         <div
           style={{
             position: 'absolute',
             left: 0,
-            top: Math.round(height * 0.62),
+            top: Math.round(height * 0.58),
             width: '100%',
-            height: 10,
-            background:
-              'repeating-linear-gradient(90deg, transparent 0 140px, rgba(255,255,255,0.18) 140px 184px, transparent 184px 260px)',
+            height: 12,
+            background: `repeating-linear-gradient(90deg, transparent 0 190px, ${ART.waterLight} 190px 248px, transparent 248px 380px)`,
           }}
         />
       </div>
@@ -49,19 +62,21 @@ const TerrainBlock: React.FC<{
   }
 
   if (piece.type === 'woods') {
-    const { x = 0, y = 0, width = 0, height = 0, color } = piece;
+    const { x = 0, y = 0, width = 0, height = 0 } = piece;
     const trees: React.ReactNode[] = [];
     let row = 0;
-    for (let ty = 12; ty < height - 40; ty += 78) {
-      const offset = row % 2 === 0 ? 0 : 44;
-      for (let tx = 16 + offset; tx < width - 40; tx += 92) {
-        trees.push(<Tree key={`${tx}-${ty}`} x={tx} y={ty} />);
+    let i = 0;
+    for (let ty = 8; ty < height - 46; ty += 72) {
+      const offset = row % 2 === 0 ? 0 : 40;
+      for (let tx = 14 + offset; tx < width - 44; tx += 88) {
+        trees.push(<Tree key={`${tx}-${ty}`} x={tx} y={ty} s={i % 3} />);
+        i++;
       }
       row++;
     }
     return (
       <div style={{ position: 'absolute', left: x, top: y, width, height }}>
-        <div style={{ position: 'absolute', inset: 0, background: color, opacity: 0.55 }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.10)' }} />
         {trees}
       </div>
     );
@@ -69,23 +84,33 @@ const TerrainBlock: React.FC<{
 
   if (piece.type === 'hills') {
     const { x = 0, y = 0, width = 0, height = 0, color } = piece;
+    // 像素丘陵：阶梯收窄的三层山体 + 顶部高光，全描边
+    const mound = (mx: number, my: number, scale: number, key: number) => (
+      <svg
+        key={key}
+        width={Math.round(200 * scale)}
+        height={Math.round(110 * scale)}
+        viewBox="0 0 20 11"
+        shapeRendering="crispEdges"
+        style={{ position: 'absolute', left: mx, top: my, imageRendering: 'pixelated' }}
+      >
+        <Px x={1} y={7} w={18} h={3} f={color} />
+        <Px x={4} y={4} w={12} h={3} f={color} />
+        <Px x={7} y={2} w={6} h={2} f={color} />
+        <rect x={8} y={2} width={4} height={1} fill="#38A169" />
+        <rect x={5} y={4} width={3} height={1} fill="#38A169" />
+      </svg>
+    );
     return (
       <div style={{ position: 'absolute', left: x, top: y, width, height }}>
-        <div style={{ position: 'absolute', inset: 0, background: color, opacity: 0.7 }} />
-        {[
-          [30, 24, 52],
-          [120, 60, 40],
-          [220, 30, 64],
-          [90, 130, 36],
-          [270, 120, 48],
-        ].map(([hx, hy, size], i) => (
-          <div key={i} style={{ position: 'absolute', left: hx, top: hy, width: size, height: size / 2, background: '#3fae57', opacity: 0.85 }} />
-        ))}
+        {mound(30, 90, 1.0, 0)}
+        {mound(200, 20, 0.8, 1)}
+        {mound(230, 140, 0.7, 2)}
       </div>
     );
   }
 
-  // road：多点折线像素土路（虚线段模拟像素石板）
+  // road：深墨描边 + 木色路面的虚线段（像素石板感）
   const { points = [], color, width: strokeWidth = 20 } = piece;
   if (points.length < 2) return null;
   return (
@@ -97,15 +122,36 @@ const TerrainBlock: React.FC<{
       style={{ position: 'absolute', left: 0, top: 0, imageRendering: 'pixelated' }}
       shapeRendering="crispEdges"
     >
-      <polyline points={points.map((p) => p.join(',')).join(' ')} fill="none" stroke={color} strokeWidth={strokeWidth} strokeDasharray="30 20" />
+      <polyline
+        points={points.map((p) => p.join(',')).join(' ')}
+        fill="none"
+        stroke={ART.outline}
+        strokeWidth={strokeWidth + 8}
+        strokeDasharray="34 18"
+      />
+      <polyline
+        points={points.map((p) => p.join(',')).join(' ')}
+        fill="none"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeDasharray="34 18"
+      />
+      <polyline
+        points={points.map((p) => p.join(',')).join(' ')}
+        fill="none"
+        stroke={ART.woodLight}
+        strokeWidth={6}
+        strokeDasharray="10 42"
+      />
     </svg>
   );
 };
 
 /**
- * PixelMap：像素战棋大地图占位底图。
- * - imageUrl 字段已预留，后续可一键替换成正式像素 PNG 地图
- * - 占位实现：纯色草地 + 硬边网格线 + 地形块（河流/树林/丘陵/官道）
+ * PixelMap v2：战棋风大地图。
+ * - 双色棋盘草地（conic 硬停顿，无渐变）
+ * - 河流/树林/丘陵/官道全部深墨描边
+ * - imageUrl 预留，可一键替换正式 PNG
  */
 export const PixelMap: React.FC<{ map: MapConfig }> = ({ map }) => {
   if (map.imageUrl) {
@@ -117,7 +163,7 @@ export const PixelMap: React.FC<{ map: MapConfig }> = ({ map }) => {
       />
     );
   }
-  const g = map.gridSize;
+  const t = map.tileSize;
   return (
     <div
       style={{
@@ -127,12 +173,13 @@ export const PixelMap: React.FC<{ map: MapConfig }> = ({ map }) => {
         width: map.width,
         height: map.height,
         backgroundColor: map.baseColor,
-        backgroundImage: `repeating-linear-gradient(0deg, ${map.gridColor} 0 3px, transparent 3px ${g}px), repeating-linear-gradient(90deg, ${map.gridColor} 0 3px, transparent 3px ${g}px)`,
+        backgroundImage: `conic-gradient(${map.checkerAlt} 25%, ${map.baseColor} 0 50%, ${map.checkerAlt} 0 75%, ${map.baseColor} 0)`,
+        backgroundSize: `${2 * t}px ${2 * t}px`,
         imageRendering: 'pixelated',
       }}
     >
-      {map.terrain.map((t) => (
-        <TerrainBlock key={t.name} piece={t} mapWidth={map.width} mapHeight={map.height} />
+      {map.terrain.map((tr) => (
+        <TerrainBlock key={tr.name} piece={tr} mapWidth={map.width} mapHeight={map.height} />
       ))}
     </div>
   );

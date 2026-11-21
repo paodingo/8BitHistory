@@ -11,6 +11,7 @@ export interface Vec2 {
 export interface FactionStyle {
   name: string;
   color: string;
+  highlight: string;
   dark: string;
 }
 
@@ -31,8 +32,8 @@ export interface MapConfig {
   height: number;
   imageUrl: string | null;
   baseColor: string;
-  gridColor: string;
-  gridSize: number;
+  checkerAlt: string;
+  tileSize: number;
   terrain: TerrainPiece[];
 }
 

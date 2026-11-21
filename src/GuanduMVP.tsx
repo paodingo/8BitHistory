@@ -147,9 +147,12 @@ export const GuanduMVP: React.FC = () => {
           text={activeDialog.text}
           variant="dialog"
           speaker={activeDialog.speaker}
-          speakerColor={battle.factions[activeDialog.faction].color}
+          speakerColor={battle.factions[activeDialog.faction].highlight}
           portraitChar={activeDialog.portrait.char}
-          portraitColor={battle.factions[activeDialog.faction].dark}
+          portraitColor={battle.factions[activeDialog.faction].color}
+          portraitHighlightColor={battle.factions[activeDialog.faction].highlight}
+          portraitDarkColor={battle.factions[activeDialog.faction].dark}
+          portraitBeard={activeDialog.speaker === '曹操'}
           portraitImageUrl={activeDialog.portrait.imageUrl}
           portraitSide={activeDialog.portraitSide}
         />
