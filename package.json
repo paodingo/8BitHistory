@@ -1,0 +1,24 @@
+{
+  "name": "8bithistory",
+  "version": "0.1.0",
+  "private": true,
+  "description": "8BitHistory — 官渡之战·火烧乌巢 15s MVP (Remotion + React + TypeScript)",
+  "scripts": {
+    "start": "remotion studio",
+    "render": "remotion render GuanduMVP out/guandu-mvp.mp4",
+    "still": "remotion still GuanduMVP out/frame-%s.png",
+    "still:fire": "remotion still GuanduMVP out/frame-330.png --frame=330",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "typescript": "^5.6.3"
+  }
+}
